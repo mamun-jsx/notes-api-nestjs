@@ -1,8 +1,11 @@
+import { UserService } from './../user/user.service';
 import { Injectable } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
+  constructor(private readonly userService: UserService) {}
+
   register(registerDto: RegisterDto) {
     // return data;
     // all business logic needs to write here
@@ -13,6 +16,7 @@ export class AuthService {
      * Generate JWT token
      * Retuen token
      * */
-    return { success: true, data: registerDto };
+    const user = this.userService.getUserByEmamil(registerDto.email);
+    return user;
   }
 }

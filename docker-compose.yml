@@ -1,0 +1,57 @@
+# Services define the different containers that make up your application
+services:
+  # The database service (PostgreSQL)
+  postgres_db:
+    # Specifies the Docker image to use for this container
+    image: postgres:15-alpine
+    # Gives a custom name to the running container
+    container_name: notes_api_db
+    # Automatically restarts the container if it stops or fails
+    restart: always
+    # Maps ports from the host machine to the container (Host:Container)
+    ports:
+      - "5433:5432"
+    # Passes environment variables to the container for configuration
+    environment:
+      # Sets the PostgreSQL user
+      POSTGRES_USER: ${DB_USER:-postgres}
+      # Sets the PostgreSQL password
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Sets the default database to create
+      POSTGRES_DB: ${DB_NAME:-notes_db}
+    # Mounts a volume to persist database data even if the container is removed
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Connects the container to a custom network
+    networks:
+      - notes_network
+
+  # The main NestJS application service
+  api:
+    # Tells Docker to build the image using the Dockerfile in the current directory
+    build: .
+    # Gives a custom name to the API container
+    container_name: notes_api_app
+    # Automatically restarts the container if it stops or fails
+    restart: always
+    # Maps ports from the host machine to the container (Host:Container)
+    ports:
+      - "3000:3000"
+    # Loads environment variables from a file
+    env_file:
+      - .env
+    # Ensures the API only starts after the database is up and running
+    depends_on:
+      - postgres_db
+    # Connects the container to the same custom network as the database
+    networks:
+      - notes_network
+
+# Defines named volumes for persistent data storage
+volumes:
+  postgres_data:
+
+# Defines custom networks for the containers to communicate securely
+networks:
+  notes_network:
+    driver: bridge
